@@ -1,0 +1,229 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --primary: 124, 58, 237; /* Purple */
+  --secondary: 56, 189, 248; /* Light Blue */
+  --accent: 139, 92, 246; /* Violet */
+  --success: 16, 185, 129; /* Green */
+  --warning: 245, 158, 11; /* Amber */
+  --error: 239, 68, 68; /* Red */
+  --background: 15, 23, 42; /* Slate 900 */
+  --foreground: 248, 250, 252; /* Slate 50 */
+  --muted: 51, 65, 85; /* Slate 700 */
+  --muted-foreground: 148, 163, 184; /* Slate 400 */
+  --border: 71, 85, 105; /* Slate 600 */
+  --input: 30, 41, 59; /* Slate 800 */
+  --ring: 124, 58, 237; /* Purple */
+}
+
+@layer base {
+  html {
+    font-family: "Inter var", system-ui, sans-serif;
+    @apply antialiased;
+  }
+
+  body {
+    @apply bg-background text-foreground min-h-screen;
+  }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-background/50;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-muted rounded-full;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-muted/80;
+  }
+}
+
+@layer components {
+  .btn {
+    @apply inline-flex items-center justify-center rounded-md px-4 py-2 text-sm font-medium transition-colors 
+           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2
+           disabled:opacity-50 disabled:pointer-events-none;
+  }
+
+  .btn-primary {
+    @apply bg-primary text-white hover:bg-primary/90;
+  }
+
+  .btn-secondary {
+    @apply bg-secondary text-white hover:bg-secondary/90;
+  }
+
+  .btn-outline {
+    @apply border border-input bg-transparent hover:bg-input text-foreground;
+  }
+
+  .btn-ghost {
+    @apply bg-transparent hover:bg-muted/30 text-foreground;
+  }
+
+  .card {
+    @apply rounded-lg border border-border bg-input p-4 shadow-sm;
+  }
+
+  .input {
+    @apply flex h-10 w-full rounded-md border border-border bg-input px-3 py-2 text-sm
+           placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2
+           focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50;
+  }
+}
+
+/* Animation classes */
+.fade-in {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+.slide-up {
+  animation: slideUp 0.3s ease-in-out;
+}
+
+.slide-down {
+  animation: slideDown 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideDown {
+  from {
+    transform: translateY(-20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* ================================================ */
+
+/* putting the Global css */
+
+/* ================================================= */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --primary: #0afff1;
+  --primary-dark: #08d6ca;
+  --primary-light: #6fffef;
+  --secondary: #9772fb;
+  --background: #0a0a10;
+  --background-light: #16161e;
+  --text: #f8f9ff;
+  --text-muted: #9ca3af;
+  --success: #10b981;
+  --warning: #f59e0b;
+  --error: #ef4444;
+  --border: #2d2d3a;
+}
+
+body {
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    sans-serif;
+  background-color: var(--background);
+  color: var(--text);
+  overflow-x: hidden;
+}
+
+@layer base {
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply font-medium tracking-wide;
+  }
+}
+
+@layer components {
+  .btn {
+    @apply inline-flex items-center justify-center rounded-md px-6 py-3 font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2;
+  }
+
+  .btn-primary {
+    @apply bg-[#0AFFF1] text-black hover:bg-[#08D6CA] focus:ring-[#0AFFF1]/50;
+  }
+
+  .btn-outline {
+    @apply border border-[#0AFFF1]/50 text-[#0AFFF1] hover:bg-[#0AFFF1]/10 focus:ring-[#0AFFF1]/30;
+  }
+
+  .card {
+    @apply rounded-xl bg-[#16161E] border border-[#2D2D3A] transition-all duration-300 hover:border-[#0AFFF1]/40 hover:shadow-[0_0_20px_rgba(10,255,241,0.1)];
+  }
+
+  .wave-container {
+    @apply absolute w-full h-full overflow-hidden pointer-events-none;
+  }
+
+  .wave {
+    @apply absolute w-[200%] h-[200%] opacity-20;
+    background: radial-gradient(circle, var(--primary) 0%, transparent 70%);
+    animation: wave 25s infinite linear;
+  }
+
+  .wave:nth-child(2) {
+    background: radial-gradient(circle, var(--secondary) 0%, transparent 70%);
+    animation: wave 35s infinite linear reverse;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: var(--background-light);
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 3px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: var(--primary-dark);
+  }
+}
+
+@keyframes wave {
+  0% {
+    transform: translate(-50%, -50%) rotate(0deg);
+  }
+  100% {
+    transform: translate(-50%, -50%) rotate(360deg);
+  }
+}
