@@ -9,7 +9,7 @@ import { useXmtpClient } from '../hooks/useXmtpClient';
 import { StreamManager } from '../utils/streamManager';
 import { DecodedMessage } from '@xmtp/xmtp-js';
 
-// ✅ GLOBAL DEDUPLICATION MEMORY (BOTH messageId + peerId)
+// Global deduplication
 const seenMessageIds = new Set<string>();
 const seenChannelIds = new Set<string>();
 
@@ -81,9 +81,9 @@ const chatReducer = (state: ChatState, action: ChatAction): ChatState => {
 
     case 'CREATE_CHANNEL':
       const exists = state.channels.some(c => c.id === action.payload.id);
-      return exists
-        ? state
-        : { ...state, channels: [...state.channels, action.payload] };
+      if (exists) return state;
+      const newChannels = [...state.channels, action.payload].sort((a, b) => b.lastMessageAt - a.lastMessageAt);
+      return { ...state, channels: newChannels };
 
     case 'RESET_UNREAD':
       return {
@@ -128,10 +128,10 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
       })
     );
 
-    dispatch({ type: 'SET_CHANNELS', payload: channels });
+    const sortedChannels = channels.sort((a, b) => b.lastMessageAt - a.lastMessageAt);
+    dispatch({ type: 'SET_CHANNELS', payload: sortedChannels });
 
-    // ✅ Initialize seenChannelIds map at load time
-    channels.forEach(c => seenChannelIds.add(c.id));
+    sortedChannels.forEach(c => seenChannelIds.add(c.id));
   }, [xmtpClient, address]);
 
   const fetchMessages = useCallback(async (channelId: string) => {
@@ -151,7 +151,6 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
     dispatch({ type: 'SET_MESSAGES', payload: { channelId, messages } });
   }, [xmtpClient]);
 
-  // ✅ STREAM HANDLER FULLY LOCKED
   useEffect(() => {
     if (!xmtpClient || !address) return;
 
@@ -165,7 +164,6 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
 
       if (!seenChannelIds.has(peer)) {
         seenChannelIds.add(peer);
-
         dispatch({
           type: 'CREATE_CHANNEL',
           payload: {

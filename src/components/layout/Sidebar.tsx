@@ -28,6 +28,7 @@ const Sidebar = ({ isOpen, toggleSidebar }: SidebarProps) => {
     return match ? match[1] : null;
   }, [location]);
 
+  // ✅ Pure deduplicated channels (safety layer)
   const uniqueChannels = useMemo(() => {
     const seen = new Set<string>();
     return channels.filter(channel => {
@@ -37,19 +38,17 @@ const Sidebar = ({ isOpen, toggleSidebar }: SidebarProps) => {
     });
   }, [channels]);
 
-  const sortedChannels = useMemo(() => {
-    return [...uniqueChannels].sort((a, b) => b.lastMessageAt - a.lastMessageAt);
-  }, [uniqueChannels]);
-
   const handleSelectChannel = (channelId: string) => {
     setCurrentChannel?.(channelId);
     navigate(`/chat/${channelId}`);
-    toggleSidebar(); // auto close on mobile
+    toggleSidebar(); // Auto close on mobile
   };
 
   return (
     <>
-      <div className={`fixed inset-y-0 left-0 bg-white/20 dark:bg-black/20 backdrop-blur-lg border border-white/15 z-50 transition-transform duration-300 ease-in-out transform ${isOpen ? 'translate-x-0 w-64' : '-translate-x-full w-64'} md:static md:translate-x-0 md:w-64 flex flex-col`}>
+      <div
+        className={`fixed inset-y-0 left-0 bg-white/20 dark:bg-black/20 backdrop-blur-lg border border-white/15 z-50 transition-transform duration-300 ease-in-out transform ${isOpen ? 'translate-x-0 w-64' : '-translate-x-full w-64'} md:static md:translate-x-0 md:w-64 flex flex-col`}
+      >
         <div className="p-4 border-b border-border flex items-center justify-between">
           <h2 className="font-medium text-sm uppercase tracking-wider text-muted-foreground">Chats</h2>
           <div className="flex gap-2">
@@ -67,7 +66,7 @@ const Sidebar = ({ isOpen, toggleSidebar }: SidebarProps) => {
             <div className="flex justify-center items-center py-10">
               <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-primary"></div>
             </div>
-          ) : sortedChannels.length === 0 ? (
+          ) : uniqueChannels.length === 0 ? (
             <div className="px-4 py-8 text-center text-muted-foreground text-sm">
               <p className="mb-2">No channels yet</p>
               <button onClick={() => setIsModalOpen(true)} className="btn btn-outline text-xs py-1 px-2">
@@ -76,7 +75,7 @@ const Sidebar = ({ isOpen, toggleSidebar }: SidebarProps) => {
             </div>
           ) : (
             <ul className="space-y-1 px-2">
-              {sortedChannels.map((channel) => (
+              {uniqueChannels.map((channel) => (
                 <li key={channel.id}>
                   <button
                     onClick={() => handleSelectChannel(channel.id)}
