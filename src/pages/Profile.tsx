@@ -79,11 +79,11 @@ const Profile = () => {
             <div><p className="text-sm text-muted-foreground mb-1">Balance</p><p className="font-medium">{balance} RAMA</p></div>
             <div><p className="text-sm text-muted-foreground mb-1">Network</p><p className="font-medium">Ramestta Mainnet</p></div>
             <div><p className="text-sm text-muted-foreground mb-1">Status</p><div className="flex items-center"><div className="h-2 w-2 rounded-full bg-success mr-2"></div><p className="font-medium">Online</p></div></div>
-            <div><p className="text-sm text-muted-foreground mb-1">View on Explorer</p><a href={`https://ramestta.com/address/${address}`} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline flex items-center">View transactions<ExternalLink size={14} className="ml-1" /></a></div>
+            <div><p className="text-sm text-muted-foreground mb-1">View on Explorer</p><a href={`https://ramascan.com/${address}`} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline flex items-center">View transactions<ExternalLink size={14} className="ml-1" /></a></div>
           </div>
         </div>
 
-        <div className="card">
+        {/* <div className="card">
           <h2 className="text-lg font-semibold mb-4">Edit Profile</h2>
 
           <form onSubmit={handleSubmit}>
@@ -107,7 +107,7 @@ const Profile = () => {
               </button>
             </div>
           </form>
-        </div>
+        </div> */}
       </motion.div>
     </div>
   );

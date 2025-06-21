@@ -1,15 +1,28 @@
+// export interface Message {
+//   id: string;
+//   sender: string;
+//   content: string;
+//   timestamp: number;
+//   signature?: string;
+//   encrypted: boolean;
+//   nickname?: string;
+//   status?: 'sending' | 'sent' | 'delivered' | 'read';
+//   reactions?: Record<string, string[]>;  // emoji reactions
+//   editedContent?: string;                // if message is edited
+//   deleted?: boolean;                     // soft delete flag
+// }
 export interface Message {
   id: string;
-  sender: string;
   content: string;
-  timestamp: number;
-  signature?: string;
-  encrypted: boolean;
-  nickname?: string;
-  status?: 'sending' | 'sent' | 'delivered' | 'read';
-  reactions?: Record<string, string[]>;  // emoji reactions
-  editedContent?: string;                // if message is edited
-  deleted?: boolean;                     // soft delete flag
+  sender: string;
+  timestamp: string;
+  replyTo?: {
+    id: string;
+    content: string;
+    sender: string;
+    timestamp: string;
+  };
+  isQuoted?: boolean; // Add this line
 }
 
 

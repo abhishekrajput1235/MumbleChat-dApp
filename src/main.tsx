@@ -9,13 +9,15 @@ import App from './App';
 import './index.css';
 import { WalletProvider } from './context/WalletContext';
 import { ChatProvider } from './context/ChatContext';
+import { Toaster } from 'react-hot-toast';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <BrowserRouter>
+    <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
       <WalletProvider>
         <ChatProvider>
           <App />
+          <Toaster position="top-center" reverseOrder={false} />
         </ChatProvider>
       </WalletProvider>
     </BrowserRouter>

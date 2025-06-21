@@ -5,10 +5,21 @@ import { RefreshCcw } from 'lucide-react';
 import ChatMessage from './ChatMessage';
 import { DecodedMessage, Conversation } from '@xmtp/xmtp-js';
 import { isAddress } from 'ethers';
+import { Store } from '../../store/Store';
 
 interface ChatListProps {
   channelId: string;
 }
+
+const ContentTypeTyping = {
+  authorityId: 'custom',
+  typeId: 'typing-indicator',
+  versionMajor: 1,
+  versionMinor: 0,
+  toString() {
+    return `${this.authorityId}/${this.typeId}/${this.versionMajor}.${this.versionMinor}`;
+  }
+};
 
 const ChatList = ({ channelId }: ChatListProps) => {
   const { address } = useWallet();
@@ -16,14 +27,23 @@ const ChatList = ({ channelId }: ChatListProps) => {
 
   const containerRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messageRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
   const [loadingChat, setLoadingChat] = useState(true);
   const [messages, setMessages] = useState<DecodedMessage[]>([]);
   const [chatError, setChatError] = useState<string | null>(null);
-  const streamRef = useRef<AsyncIterator<DecodedMessage> | null>(null);
-  const paginatorRef = useRef<any>(null);
   const [hasMore, setHasMore] = useState(false);
   const [loadingOlder, setLoadingOlder] = useState(false);
+  const [isTyping, setIsTyping] = useState(false);
+
+  const paginatorRef = useRef<any>(null);
+  const streamRef = useRef<AsyncIterator<DecodedMessage> | null>(null);
+  const typingTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  const scrollToMessageId = Store((state) => state.scrollToMessageId);
+  const setScrollToMessageId = Store((state) => state.setScrollToMessageId);
+
+
 
   const loadMessages = useCallback(async (convo: Conversation) => {
     try {
@@ -39,14 +59,14 @@ const ChatList = ({ channelId }: ChatListProps) => {
         }
         const page = await paginatorRef.current.next();
         let batch = page.value || [];
-        batch = batch.reverse();
-        allMessages = batch;
+        allMessages = batch.reverse();
         setHasMore(!page.done);
       } else {
         const legacyMessages = await convo.messages({ limit: 1000 });
         allMessages = legacyMessages.sort((a, b) => a.sent.getTime() - b.sent.getTime());
         setHasMore(false);
       }
+
       setMessages(allMessages);
     } catch (error) {
       console.error("ChatList: Error loading messages:", error);
@@ -70,27 +90,28 @@ const ChatList = ({ channelId }: ChatListProps) => {
 
   useEffect(() => {
     let isMounted = true;
-    const setupConversationAndStream = async () => {
+
+    const setupConversation = async () => {
       if (!isAddress(channelId)) {
         setChatError('Invalid Ethereum address for channel.');
         setLoadingChat(false);
         return;
       }
-      if (isLoadingXmtp || !xmtpClient) {
-        setLoadingChat(true);
-        return;
-      }
+
+      if (isLoadingXmtp || !xmtpClient) return;
       if (xmtpError) {
         setChatError(xmtpError);
         setLoadingChat(false);
         return;
       }
+
       if (streamRef.current) {
         try {
           await streamRef.current.return?.();
-          streamRef.current = null;
-        } catch (e) {}
+        } catch {}
+        streamRef.current = null;
       }
+
       try {
         setLoadingChat(true);
         setChatError(null);
@@ -98,8 +119,9 @@ const ChatList = ({ channelId }: ChatListProps) => {
 
         const canMessage = await xmtpClient.canMessage(channelId);
         if (!isMounted) return;
+
         if (!canMessage) {
-          setChatError('Recipient is not on the XMTP network.');
+          setChatError('Recipient is not on the MumbleChat network.');
           setLoadingChat(false);
           return;
         }
@@ -109,51 +131,71 @@ const ChatList = ({ channelId }: ChatListProps) => {
 
         await loadMessages(convo);
         if (!isMounted) return;
+
         setLoadingChat(false);
 
-        const messageStream = await convo.streamMessages();
+        const stream = await convo.streamMessages();
         if (!isMounted) return;
-        streamRef.current = messageStream;
 
-        for await (const newMsg of messageStream) {
+        streamRef.current = stream;
+
+        for await (const newMsg of stream) {
           if (!isMounted) break;
+
+          if (newMsg.contentType?.toString() === ContentTypeTyping.toString()) {
+            if (newMsg.senderAddress.toLowerCase() !== address?.toLowerCase()) {
+              setIsTyping(true);
+              if (typingTimerRef.current) clearTimeout(typingTimerRef.current);
+              typingTimerRef.current = setTimeout(() => {
+                setIsTyping(false);
+              }, 3000);
+            }
+            continue;
+          }
+
           setMessages(prev => {
-            if (prev.some(m => m.id === newMsg.id)) return prev;
+            if (prev.some((m) => m.id === newMsg.id)) return prev;
             return [...prev, newMsg];
           });
         }
       } catch (err: any) {
         if (!isMounted) return;
-        console.error('ChatList: Error:', err);
-        setChatError(`Failed to load conversation: ${err.message || 'Unknown error'}.`);
+        setChatError(`Failed to load conversation: ${err.message || 'Unknown error'}`);
         setLoadingChat(false);
-      } finally {
-        if (isMounted) {
-          streamRef.current = null;
-        }
       }
     };
 
-    setupConversationAndStream();
+    setupConversation();
+
     return () => {
       isMounted = false;
       if (streamRef.current) {
         try {
           streamRef.current.return?.();
-          streamRef.current = null;
-        } catch (e) {}
+        } catch {}
+        streamRef.current = null;
       }
     };
-  }, [channelId, address, loadMessages, xmtpClient, isLoadingXmtp, xmtpError]);
+  }, [channelId, address, xmtpClient, isLoadingXmtp, xmtpError, loadMessages]);
+
+  useEffect(() => {
+    if (scrollToMessageId && messageRefs.current[scrollToMessageId]) {
+      messageRefs.current[scrollToMessageId]?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'center',
+      });
+      setScrollToMessageId(null);
+    }
+  }, [scrollToMessageId, setScrollToMessageId]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
       messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-    }, 50);
+    }, 100);
     return () => clearTimeout(timer);
   }, [messages, loadingChat]);
 
-  if (isLoadingXmtp || loadingChat) {
+  if (loadingChat || isLoadingXmtp) {
     return (
       <div className="flex-1 flex items-center justify-center">
         <div className="animate-spin h-8 w-8 border-2 border-t-transparent border-primary rounded-full" />
@@ -188,27 +230,37 @@ const ChatList = ({ channelId }: ChatListProps) => {
         </div>
       )}
 
-      {/* ✅ Render messages with proper channelId and showHeader */}
       {messages.map((message, index) => {
         const prev = messages[index - 1];
         const showHeader = !prev || prev.senderAddress !== message.senderAddress;
+        const isHighlighted = scrollToMessageId === message.id;
 
         return (
-          <ChatMessage
+          <div
             key={message.id}
-            message={{
-              id: message.id,
-              sender: message.senderAddress,
-              content: message.content,
-              timestamp: message.sent.getTime(),
-              encrypted: true,
-            }}
-            channelId={channelId}
-            isOwn={message.senderAddress.toLowerCase() === address?.toLowerCase()}
-            showHeader={showHeader}
-          />
+            ref={(el) => (messageRefs.current[message.id] = el)}
+          >
+            <ChatMessage
+              message={{
+                id: message.id,
+                sender: message.senderAddress,
+                content: message.content,
+                timestamp: message.sent.getTime(),
+                encrypted: true,
+              }}
+              channelId={channelId}
+              isOwn={message.senderAddress.toLowerCase() === address?.toLowerCase()}
+              showHeader={showHeader}
+              highlighted={isHighlighted}
+            />
+          </div>
         );
       })}
+
+      {isTyping && (
+        <div className="text-xs italic text-muted-foreground my-2">Typing...</div>
+      )}
+
       <div ref={messagesEndRef} />
     </div>
   );

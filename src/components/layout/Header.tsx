@@ -1,7 +1,9 @@
 import { useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useWallet } from '../../hooks/useWallet';
 import { Menu, User, LogOut } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
+import smsBg from '../../img/smsBg.jpg'
 
 interface HeaderProps {
   toggleSidebar: () => void;
@@ -13,7 +15,7 @@ const Header = ({ toggleSidebar }: HeaderProps) => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  const shortAddress = address ? `${address.slice(0, 6)}...${address.slice(-4)}` : 'Not connected';
+  const shortAddress = address ? `${address.slice(0, 4)}...${address.slice(-5)}` : 'Not connected';
 
   const handleDisconnect = () => {
     disconnect();
@@ -37,7 +39,8 @@ const Header = ({ toggleSidebar }: HeaderProps) => {
   }, []);
 
   return (
-    <header className="bg-input border-b border-border h-16 flex items-center justify-between px-4 z-10">
+    <header className="bg-input border-b-2 border-white/15 h-16 flex items-center justify-between px-4 z-10"   style={{ backgroundImage: `url(${smsBg})` }}
+>
       <div className="flex items-center gap-4">
         <button
           onClick={toggleSidebar}
@@ -46,7 +49,9 @@ const Header = ({ toggleSidebar }: HeaderProps) => {
         >
           <Menu size={20} />
         </button>
-        <h1 className="text-lg md:text-xl font-semibold tracking-tight text-primary">MumbleChat</h1>
+        {/* <h1 className="text-lg md:text-xl font-extrabold tracking-tight text-[#01FFFF]">MumbleChat</h1> */}
+        <Link to="/chat" className="text-lg md:text-xl font-extrabold tracking-tight text-[#01FFFF]">MumbleChat</Link>
+
       </div>
 
       <div className="flex items-center gap-4">
@@ -62,20 +67,22 @@ const Header = ({ toggleSidebar }: HeaderProps) => {
             className="flex items-center gap-2 px-3 py-1.5 rounded-md border border-border bg-background hover:bg-muted/30 transition-colors"
           >
             <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-primary">
-              <User size={16} />
+              <User size={28} />
             </div>
             <span className="text-sm hidden sm:inline-block max-w-[90px] truncate">{shortAddress}</span>
           </button>
 
           {dropdownOpen && (
-            <div className="absolute right-0 mt-2 w-48 rounded-md bg-input border border-border shadow-lg py-1 z-20">
-              <button
-                onClick={handleProfileClick}
-                className="flex w-full items-center gap-2 px-4 py-2 text-sm hover:bg-muted/30"
-              >
-                <User size={16} />
-                Profile
-              </button>
+            <div className="absolute right-0 mt-2 w-48 rounded-md bg-input border border-border shadow-lg py-1 z-[1000] isolate transform-gpu bg-gray-700"
+            style={{ backgroundImage: `url(${smsBg})` }}
+            >    
+            <button
+              onClick={handleProfileClick}
+              className="flex w-full items-center gap-2 px-4 py-2 text-sm hover:bg-muted/30"
+            >
+              <User size={16} />
+              Profile
+            </button>
               <button
                 onClick={handleDisconnect}
                 className="flex w-full items-center gap-2 px-4 py-2 text-sm hover:bg-muted/30 text-error"
@@ -85,6 +92,7 @@ const Header = ({ toggleSidebar }: HeaderProps) => {
               </button>
             </div>
           )}
+
         </div>
       </div>
     </header>
